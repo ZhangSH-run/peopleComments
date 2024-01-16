@@ -1,16 +1,18 @@
 package com.hmdp.mapper;
 
-import com.hmdp.entity.User;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.hmdp.entity.User;
 
 /**
- * <p>
- *  Mapper 接口
- * </p>
- *
- * @author 虎哥
- * @since 2021-12-22
- */
+* @author ZSH
+* @description 针对表【tb_user】的数据库操作Mapper
+* @createDate 2024-01-16 16:39:34
+* @Entity com.hmdp.domain.User
+*/
 public interface UserMapper extends BaseMapper<User> {
 
 }
+
+
+
+
