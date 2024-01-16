@@ -5,12 +5,14 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hmdp.dto.LoginFormDTO;
 import com.hmdp.dto.Result;
+import com.hmdp.dto.UserDTO;
 import com.hmdp.entity.User;
 import com.hmdp.mapper.UserMapper;
 import com.hmdp.service.IUserService;
 import com.hmdp.utils.RegexUtils;
 import com.hmdp.utils.SystemConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,16 +63,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements IUs
         queryWrapper.eq(User::getPhone , phone);
         User user = baseMapper.selectOne(queryWrapper);
 
-        //5.判断用户是否存在
+        // 5.判断用户是否存在
         if(user == null){
-            //不存在，则创建
+            // 不存在，则创建
             user =  iUserService.createUserWithPhone(phone);
+            if (user == null){
+                return Result.fail("服务器内部错误，创建用户失败。");
+            }
         }
-        if (user == null){
-            return Result.fail("服务器内部错误，创建用户失败。");
-        }
-        //7.保存用户信息到session中
-        session.setAttribute("user",user);
+        // 7.保存用户信息到session中
+        UserDTO userDTO = new UserDTO();
+        BeanUtils.copyProperties(user,userDTO);
+        session.setAttribute("user",userDTO);
 
         return Result.ok();
     }
