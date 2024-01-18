@@ -1,18 +1,11 @@
 package com.hmdp.interceptor;
 
-import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.util.StrUtil;
 import com.hmdp.dto.UserDTO;
-import com.hmdp.utils.RedisConstants;
 import com.hmdp.utils.UserThreadLocal;
-import org.springframework.core.annotation.Order;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 public class LoginInterceptor implements HandlerInterceptor {
 
     @Override
