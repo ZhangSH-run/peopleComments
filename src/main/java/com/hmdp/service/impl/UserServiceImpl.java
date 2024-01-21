@@ -12,14 +12,20 @@ import com.hmdp.service.IUserService;
 import com.hmdp.utils.RedisConstants;
 import com.hmdp.utils.RegexUtils;
 import com.hmdp.utils.SystemConstants;
+import com.hmdp.utils.UserThreadLocal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.connection.BitFieldSubCommands;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -107,5 +113,61 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements IUs
         user.setNickName(SystemConstants.USER_NICK_NAME_PREFIX + RandomUtil.randomString(6));
         baseMapper.insert(user);
         return user;
+    }
+
+    @Override
+    public Result sign() {
+        // 获取当前登录用户
+        Long userId = UserThreadLocal.getUser().getId();
+        // 获取日期
+        LocalDate now = LocalDate.now();
+        // 本月的第几天
+        int day = now.getDayOfMonth();
+        String keySuffix = now.format(DateTimeFormatter.ofPattern(":yyyyMM"));
+        // 设置key
+        String key = RedisConstants.USER_SIGN_KEY + userId + keySuffix;
+        redisTemplate.opsForValue().setBit(key , day - 1 , true);
+        return Result.ok();
+    }
+
+    @Override
+    public Result signCount() {
+        // 获取当前登录用户
+        Long userId = UserThreadLocal.getUser().getId();
+        // 获取日期
+        LocalDate now = LocalDate.now();
+        // 本月的第几天
+        int day = now.getDayOfMonth();
+        String keySuffix = now.format(DateTimeFormatter.ofPattern(":yyyyMM"));
+        // 设置key
+        String key = RedisConstants.USER_SIGN_KEY + userId + keySuffix;
+        // 获取本月截至今天的所有的签到记录
+        List<Long> result = redisTemplate.opsForValue().bitField(key,
+                BitFieldSubCommands.create()
+                        .get(BitFieldSubCommands
+                                .BitFieldType.unsigned(day)).valueAt(0)
+        );
+        if (result == null || result.isEmpty()){
+            return Result.ok(0);
+        }
+        Long num = result.get(0);
+        if (num == null || num == 0) {
+            return Result.ok(0);
+        }
+        // 循环遍历
+        int count = 0;
+        while (true) {
+            // 让这个数字与1做与运算，得到数字的最后一个bit位  // 判断这个bit位是否为0
+            if ((num & 1) == 0) {
+                // 如果为0，说明未签到，结束
+                break;
+            }else {
+                // 如果不为0，说明已签到，计数器+1
+                count++;
+            }
+            // 把数字右移一位，抛弃最后一个bit位，继续下一个bit位
+            num >>>= 1;
+        }
+        return Result.ok(count);
     }
 }

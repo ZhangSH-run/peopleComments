@@ -14,9 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpSession;
-
-
 @Slf4j
 @RestController
 @RequestMapping("/user")
@@ -85,5 +82,15 @@ public class UserController {
         UserDTO userDTO = BeanUtil.copyProperties(user, UserDTO.class);
         // 返回
         return Result.ok(userDTO);
+    }
+
+    @PostMapping("/sign")
+    public Result sign(){
+        return userService.sign();
+    }
+
+    @GetMapping("/sign/count")
+    public Result count(){
+        return userService.signCount();
     }
 }
